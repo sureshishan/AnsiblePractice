@@ -1,0 +1,74 @@
+---
+- name: Dploying NodeJs application onto Production
+  hosts: all
+  become: yes
+
+  tasks:
+  - name: Updating the apt packages
+    apt:
+      update_cache: yes
+    when: ansible_os_family == "Debian"
+  - name: Updating Yum pckages
+    command: yum update
+    when: ansible_os_family == "Redhat"
+
+# NodeJs specific settings
+# Installed from details in 
+# https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-16-04
+- name: Installing NodeJs
+  hosts: app
+  become: yes
+
+  vars:
+    folderpath: /home/ansible/helper
+    appserverport: 8080
+  tasks:
+  - name: Creating the Directory for placing the shell file downloaded from web
+    file:
+      path: "{{ folderpath }}"
+      state: directory
+      mode: 0755
+  - name: Downeload NodeJs package setup.
+    #command: "curl -sL https://deb.nodesource.com/setup_8.x -o {{ folderpath }}/nodesource_setup.sh"
+    get_url:
+      url: https://deb.nodesource.com/setup_8.x
+      dest: "{{ folderpath }}/nodesource_setup.sh"
+  - name: Execute the downloaded shell script
+    shell: "bash {{ folderpath }}/nodesource_setup.sh"
+  - name: Installing nodejs
+    apt:
+      name: nodejs
+      state: present
+  - name: copying the application code to Node.
+    template:
+      src: "templates/hello.js.j2"
+      dest: " {{ folderpath }}/hello.js "
+  - name: Installing pm2
+    npm:
+      name: pm2
+      global: yes
+  - name: Starting NodeJs App
+    command: "pm2 start {{ folderpath }}/hello.js"
+
+- name: Installing Nginx on webserver
+  hosts: web
+  become: yes
+  vars:
+    webserver_dns_name: "ec2-35-173-130-60.compute-1.amazonaws.com"
+    appserverport: 8080
+    appserverip: "172.31.44.224"
+  tasks:
+  - name: Installing Nginx
+    apt:
+      name: nginx
+      state: present
+  - name: copy the default file
+    template:
+      src: "templates/default.j2"
+      dest: /etc/nginx/sites-available/default
+    notify: Restart Nginx
+  handlers:
+  - name: Restart Nginx
+    service:
+      name: nginx
+      state: restarted
