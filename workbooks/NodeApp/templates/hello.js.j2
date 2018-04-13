@@ -3,5 +3,5 @@ var http = require('http');
 http.createServer(function (req, res) {
   res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end('Hello World\n');
-}).listen({{ appserverport }}, "{{ ansible_all_ipv4_addresses }}");
-console.log('Server running at http://{{ ansible_all_ipv4_addresses }}:{{ appserverport }}/');
+}).listen({{ appserverport }}, {{ app_ip }});
+console.log('Server running at http://{{ app_ip }}:{{ appserverport }}/');

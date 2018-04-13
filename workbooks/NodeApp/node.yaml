@@ -22,6 +22,7 @@
   vars:
     folderpath: /home/ansible/helper
     appserverport: 8080
+    app_ip: 172.31.44.224
 
   tasks:
   - name: Creating the Directory for placing the shell file downloaded from web
@@ -61,7 +62,7 @@
     webserver_dns_name: "ec2-35-173-130-60.compute-1.amazonaws.com"
     appserverport: 8080
     appserverip: "172.31.44.224"
-    
+
   tasks:
   - name: Installing Nginx
     apt:
